@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<ul>
+    {% for query in user_queries %}
+        <li>
+            <a href="{{ url_for('saved_result', query_id=query.id) }}">{{ query.created_at }}</a> | {{ query.url }} | 
+            {% if query.status == 0 %}
+                In Progress
+            {% elif query.status == 1 %}
+                Completed
+            {% elif query.status == 2 %}
+                Failed
+            {% elif query.status == 3 %}
+                Queued
+            {% endif %}
+        </li>
+    {% else %}
+        <li>No history found.</li>
+    {% endfor %}
+</ul>
+
+{% endblock %}
