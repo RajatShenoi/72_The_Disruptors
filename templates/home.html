@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Home Page</h1>
+    <form action="/analyse" method="post">
+        <label for="url-input">Enter URL:</label>
+        <input type="url" id="url-input" name="url" required>
+        <button type="submit">Submit</button>
+    </form>
+{% endblock %}

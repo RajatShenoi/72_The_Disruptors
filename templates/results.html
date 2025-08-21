@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3>Scores</h3>
+    <ul>
+        {% for category, score in scores.items() %}
+            <li>{{ category }}: {{ score }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Category Audits</h3>
+    <ul>
+        {% for category, data in category_audits.items() %}
+            <li>
+                <strong>{{ data.title }}</strong>
+                <ul>
+                    {% for group, audits in data.groups.items() %}
+                        <li>
+                            <strong>{{ group }}</strong>
+                            <ul>
+                                {% for audit in audits %}
+                                    <li>
+                                        {{ audit.title }}: {{ audit.displayValue }}
+                                        <button type="button" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none';">
+                                            Description
+                                        </button>
+                                        <div style="display:none; margin-left:20px;">
+                                            {{ audit.description }}
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h3>Alerts by Severity</h3>
+    <ul>
+        {% for severity, alerts in alerts_by_severity.items() %}
+            <li>
+                <strong>{{ severity }}</strong>
+                <ul>
+                    {% for alert in alerts %}
+                        <li>
+                            <strong>{{ alert.name }}</strong> ({{ alert.riskdesc }})<br>
+                            <span>{{ alert.desc | safe }}</span>
+                            <br>
+                            <strong>Instances:</strong>
+                            <ul>
+                                {% for instance in alert.instances %}
+                                    <li>
+                                        URI: {{ instance.uri }}<br>
+                                        Method: {{ instance.method }}
+                                        {% if instance.param %}<br>Param: {{ instance.param }}{% endif %}
+                                        {% if instance.attack %}<br>Attack: {{ instance.attack }}{% endif %}
+                                        {% if instance.evidence %}<br>Evidence: {{ instance.evidence }}{% endif %}
+                                        {% if instance.otherinfo %}<br>Other Info: {{ instance.otherinfo }}{% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <strong>Solution:</strong> <span>{{ alert.solution | safe }}</span><br>
+                            {% if alert.reference %}
+                                <strong>References:</strong>
+                                <span>{{ alert.reference | safe }}</span>
+                                <br>
+                            {% endif %}
+                            {% if alert.otherinfo %}
+                                <strong>Other Info:</strong> {{ alert.otherinfo }}<br>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h3>OWASP ZAP Results</h3>
+    <pre>{{ zap_json | tojson(indent=2) }}</pre>
+{% endblock %}
