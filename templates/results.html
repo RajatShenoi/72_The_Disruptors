@@ -8,7 +8,7 @@
             transform-origin: 50% 50%;
         }
         .prose p { margin: 0.5em 0; }
-        .details-panel { display: none; }
+        .details-panel, #ai-modal { display: none; }
     </style>
     <!-- Main Content -->
     <main class="pt-16">
@@ -152,13 +152,17 @@
                     <div id="security" class="tab-panel">
                         <div class="space-y-4">
                             {% for severity, alerts in alerts_by_severity.items() %}
+                            {% if alerts %}
                             <h2 class="text-xl font-semibold mb-2">{{ severity }}</h2>
                             <div class="bg-white rounded-lg shadow-md divide-y divide-gray-200">
                                 {% for alert in alerts %}
                                 <div class="accordion-item">
-                                    <button class="accordion-header w-full text-left p-4 flex justify-between items-center">
+                                    <div class="accordion-header w-full text-left p-4 flex justify-between items-center cursor-pointer">
                                         <span class="font-medium">{{ alert.name }}</span>
                                         <div class="flex items-center space-x-2">
+                                            <button class="ai-button p-1 rounded-full hover:bg-indigo-100" data-audit-name="{{ alert.name }}" data-audit-desc="{{ alert.desc }}">
+                                                <svg class="w-5 h-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.14-10.8a.75.75 0 01.04 1.06l-4.25 4.5a.75.75 0 01-1.06-.04l-2.25-2.5a.75.75 0 011.1-1.02l1.72 1.905 3.72-3.936a.75.75 0 011.06-.04zm-3.89-2.45a.75.75 0 00-1.06 1.06l2.25 2.5a.75.75 0 001.06-.04l4.25-4.5a.75.75 0 00-1.1-1.02l-3.72 3.936-1.72-1.905z" clip-rule="evenodd" /></svg>
+                                            </button>
                                             {% if severity == "High" %}
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ severity }}</span>
                                             {% elif severity == "Medium" %}
@@ -170,7 +174,7 @@
                                             {% endif %}
                                             <svg class="w-5 h-5 text-gray-500 transform transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                                         </div>
-                                    </button>
+                                    </div>
                                     <div class="details-panel p-4 border-t border-gray-200 text-sm text-gray-600 space-y-4">
                                         <div><strong>Description:</strong><div class="prose prose-sm max-w-none"><p>{{ alert.desc | safe }}</p></div></div>
                                         <div><strong>Solution:</strong><div class="prose prose-sm max-w-none"><p>{{ alert.solution | safe }}</p></div></div>
@@ -193,14 +197,16 @@
                                 </div>
                                 {% endfor %}
                             </div>
+                            {% endif %}
                             {% endfor %}
                         </div>
                     </div>
 
-                    <!-- Performance Panel -->
-                    <div id="performance" class="tab-panel" style="display: none;">
+                    <!-- Other Panels: Performance, Accessibility, SEO -->
+                    {% for category_key, category_data in category_audits.items() %}
+                    <div id="{{ category_key }}" class="tab-panel" style="display: none;">
                         <div class="space-y-6">
-                            {% for group, audits in category_audits["performance"].groups.items() %}
+                            {% for group, audits in category_data.groups.items() %}
                                 <div>
                                     <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ group }}</h3>
                                     <div class="bg-white rounded-lg shadow-md divide-y divide-gray-200">
@@ -210,16 +216,21 @@
                                                     <div class="mr-3">
                                                         {% if audit.score == 1 %}
                                                             <svg class="w-5 h-5 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                        {% elif audit.score == 0 %}
+                                                             <svg class="w-5 h-5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                                         {% else %}
-                                                            <svg class="w-5 h-5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                            <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                                         {% endif %}
                                                     </div>
                                                     <div class="flex-1">
                                                         <p class="font-medium text-gray-900">{{ audit.title | safe }}</p>
                                                         <p class="text-sm text-gray-500">
-                                                            {% if audit.displayValue != '✔️' %}{{ audit.displayValue }}{% endif %}
+                                                            {% if audit.displayValue and audit.displayValue != '✔️' %}{{ audit.displayValue }}{% endif %}
                                                         </p>
                                                     </div>
+                                                     <button class="ai-button p-1 rounded-full hover:bg-indigo-100" data-audit-name="{{ audit.title }}" data-audit-desc="{{ audit.description }}">
+                                                        <svg class="w-5 h-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.14-10.8a.75.75 0 01.04 1.06l-4.25 4.5a.75.75 0 01-1.06-.04l-2.25-2.5a.75.75 0 011.1-1.02l1.72 1.905 3.72-3.936a.75.75 0 011.06-.04zm-3.89-2.45a.75.75 0 00-1.06 1.06l2.25 2.5a.75.75 0 001.06-.04l4.25-4.5a.75.75 0 00-1.1-1.02l-3.72 3.936-1.72-1.905z" clip-rule="evenodd" /></svg>
+                                                    </button>
                                                     <svg class="w-5 h-5 text-gray-500 transform transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                                                 </div>
                                                 <div class="details-panel p-4 border-t border-gray-200 text-sm text-gray-600 prose prose-sm max-w-none">
@@ -232,82 +243,26 @@
                             {% endfor %}
                         </div>
                     </div>
-                    
-                    <!-- Accessibility Panel -->
-                    <div id="accessibility" class="tab-panel" style="display: none;">
-                        <div class="space-y-6">
-                            {% for group, audits in category_audits["accessibility"].groups.items() %}
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ group }}</h3>
-                                    <div class="bg-white rounded-lg shadow-md divide-y divide-gray-200">
-                                        {% for audit in audits %}
-                                            <div class="accordion-item">
-                                                <div class="accordion-header p-4 flex items-center cursor-pointer">
-                                                    <div class="mr-3">
-                                                        {% if audit.score == 1 %}
-                                                            <svg class="w-5 h-5 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                        {% else %}
-                                                            <svg class="w-5 h-5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                        {% endif %}
-                                                    </div>
-                                                    <div class="flex-1">
-                                                        <p class="font-medium text-gray-900">{{ audit.title | safe }}</p>
-                                                        <p class="text-sm text-gray-500">
-                                                            {% if audit.displayValue != '✔️' %}{{ audit.displayValue }}{% endif %}
-                                                        </p>
-                                                    </div>
-                                                    <svg class="w-5 h-5 text-gray-500 transform transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                                                </div>
-                                                <div class="details-panel p-4 border-t border-gray-200 text-sm text-gray-600 prose prose-sm max-w-none">
-                                                    <p>{{ audit.description | safe }}</p>
-                                                </div>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <!-- SEO Panel -->
-                    <div id="seo" class="tab-panel" style="display: none;">
-                        <div class="space-y-6">
-                            {% for group, audits in category_audits["seo"].groups.items() %}
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ group }}</h3>
-                                    <div class="bg-white rounded-lg shadow-md divide-y divide-gray-200">
-                                        {% for audit in audits %}
-                                            <div class="accordion-item">
-                                                <div class="accordion-header p-4 flex items-center cursor-pointer">
-                                                    <div class="mr-3">
-                                                        {% if audit.score == 1 %}
-                                                            <svg class="w-5 h-5 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                        {% else %}
-                                                            <svg class="w-5 h-5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                        {% endif %}
-                                                    </div>
-                                                    <div class="flex-1">
-                                                        <p class="font-medium text-gray-900">{{ audit.title | safe }}</p>
-                                                        <p class="text-sm text-gray-500">
-                                                            {% if audit.displayValue != '✔️' %}{{ audit.displayValue }}{% endif %}
-                                                        </p>
-                                                    </div>
-                                                    <svg class="w-5 h-5 text-gray-500 transform transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                                                </div>
-                                                <div class="details-panel p-4 border-t border-gray-200 text-sm text-gray-600 prose prose-sm max-w-none">
-                                                    <p>{{ audit.description | safe }}</p>
-                                                </div>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </main>
+    
+    <!-- AI Suggestion Modal -->
+    <div id="ai-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-30">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center pb-3">
+                <h3 class="text-lg font-medium text-gray-900" id="ai-modal-title">AI Suggestion</h3>
+                <button id="ai-modal-close" class="p-1 rounded-full hover:bg-gray-200">
+                    <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div id="ai-suggestion-content" class="text-sm text-gray-700 prose prose-sm max-w-none">
+                <!-- AI content will be injected here -->
+            </div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -319,21 +274,14 @@
             tabButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const targetPanelId = button.dataset.tabTarget;
-
                     tabButtons.forEach(btn => {
                         btn.classList.remove('border-indigo-500', 'text-indigo-600');
                         btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
                     });
-
                     button.classList.add('border-indigo-500', 'text-indigo-600');
                     button.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-
                     tabPanels.forEach(panel => {
-                        if (panel.id === targetPanelId) {
-                            panel.style.display = 'block';
-                        } else {
-                            panel.style.display = 'none';
-                        }
+                        panel.style.display = panel.id === targetPanelId ? 'block' : 'none';
                     });
                 });
             });
@@ -342,18 +290,75 @@
             const accordionItems = document.querySelectorAll('.accordion-item');
             accordionItems.forEach(item => {
                 const header = item.querySelector('.accordion-header');
-                header.addEventListener('click', () => {
+                header.addEventListener('click', (e) => {
+                    if (e.target.closest('.ai-button')) return;
                     const detailsPanel = header.nextElementSibling;
-                    const arrowIcon = header.querySelector('svg');
-                    
-                    if (detailsPanel.style.display === 'block') {
-                        detailsPanel.style.display = 'none';
-                        arrowIcon.classList.remove('rotate-180');
-                    } else {
-                        detailsPanel.style.display = 'block';
-                        arrowIcon.classList.add('rotate-180');
-                    }
+                    const arrowIcon = header.querySelector('svg:last-child');
+                    const isVisible = detailsPanel.style.display === 'block';
+                    detailsPanel.style.display = isVisible ? 'none' : 'block';
+                    arrowIcon.classList.toggle('rotate-180', !isVisible);
                 });
+            });
+
+            // AI Modal Functionality
+            const aiModal = document.getElementById('ai-modal');
+            const aiModalClose = document.getElementById('ai-modal-close');
+            const aiModalTitle = document.getElementById('ai-modal-title');
+            const aiSuggestionContent = document.getElementById('ai-suggestion-content');
+            const aiButtons = document.querySelectorAll('.ai-button');
+
+            const openAiModal = async (auditName, auditDesc) => {
+                aiModalTitle.textContent = `AI Suggestion for: ${auditName}`;
+                aiSuggestionContent.innerHTML = '<p class="text-center">Generating suggestion...</p>';
+                aiModal.style.display = 'block';
+
+                // Make a real API call to your backend
+                try {
+                    const response = await fetch('/get_ai_suggestion', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            audit_name: auditName,
+                            audit_desc: auditDesc
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    // Use a library like 'marked' to safely render Markdown if the API returns it
+                    // For now, we'll just insert the text.
+                    aiSuggestionContent.innerHTML = `<div class="prose prose-sm max-w-none">${data.suggestion}</div>`;
+
+                } catch (error) {
+                    console.error("Error fetching AI suggestion:", error);
+                    aiSuggestionContent.innerHTML = `<p class="text-red-500">Sorry, we couldn't generate a suggestion at this time. Please try again later.</p>`;
+                }
+            };
+
+            aiButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const auditName = button.dataset.auditName;
+                    const auditDesc = button.dataset.auditDesc;
+                    openAiModal(auditName, auditDesc);
+                });
+            });
+
+            const closeAiModal = () => {
+                aiModal.style.display = 'none';
+            };
+
+            aiModalClose.addEventListener('click', closeAiModal);
+            aiModal.addEventListener('click', (e) => {
+                if (e.target === aiModal) {
+                    closeAiModal();
+                }
             });
 
             // Mobile menu script

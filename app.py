@@ -1,4 +1,4 @@
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mail import Mail, Message
 from models import User, Queries, db
@@ -7,6 +7,8 @@ from rq import Queue
 from redis import Redis
 from tasks import run_analysis_task
 
+import markdown
+import requests
 import json
 import os
 
@@ -40,6 +42,68 @@ def load_user(user_id):
 @login_manager.unauthorized_handler
 def unauthorized_callback():
     return redirect(url_for('login'))
+
+@app.route('/get_ai_suggestion', methods=['POST'])
+def get_ai_suggestion():
+    data = request.get_json()
+    audit_name = data.get('audit_name')
+    audit_desc = data.get('audit_desc')
+
+    if not audit_name or not audit_desc:
+        return jsonify({'error': 'Missing audit details'}), 400
+
+    perplexity_api_key = os.environ.get("PERPLEXITY_API_KEY")
+    if not perplexity_api_key:
+        return jsonify({'error': 'API key not configured'}), 500
+
+    url = "https://api.perplexity.ai/chat/completions"
+
+    prompt = f"""
+    Based on the following website audit finding, provide a concise, actionable recommendation for a web developer.
+    
+    Audit Finding: "{audit_name}"
+    Description: "{audit_desc}"
+    
+    Recommendation:
+    """
+
+    payload = {
+        "model": "sonar",
+        "messages": [
+            {
+                "role": "system",
+                "content": "Be a helpful and concise assistant for web developers."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {perplexity_api_key}"
+    }
+
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+        api_response = response.json()
+        # Defensive checks for expected response structure
+        if (
+            'choices' in api_response and
+            isinstance(api_response['choices'], list) and
+            len(api_response['choices']) > 0 and
+            'message' in api_response['choices'][0] and
+            'content' in api_response['choices'][0]['message']
+        ):
+            suggestion = markdown.markdown(api_response['choices'][0]['message']['content'])
+            return jsonify({'suggestion': suggestion})
+        else:
+            return jsonify({'error': 'Unexpected API response format'}), 500
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': str(e)}), 500
+
 
 # Home route
 @app.route('/')
