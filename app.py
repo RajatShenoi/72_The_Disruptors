@@ -1,5 +1,6 @@
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_mail import Mail, Message
 from models import User, Queries, db
 from werkzeug.security import generate_password_hash, check_password_hash
 from rq import Queue
@@ -7,16 +8,24 @@ from redis import Redis
 from tasks import run_analysis_task
 
 import json
+import os
 
 def create_app():
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
     app.config['SECRET_KEY'] = 'your-very-secure-secret-key'
+    app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USERNAME'] = os.environ.get('EMAIL_USER')  # Your email address
+    app.config['MAIL_PASSWORD'] = os.environ.get('EMAIL_PASS')  # Your email password
+    app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('EMAIL_USER')
     db.init_app(app)
     return app
 
 app = create_app()
 login_manager = LoginManager(app)
+mail = Mail(app)
 
 redis_conn = Redis()
 q = Queue(connection=redis_conn)
@@ -125,7 +134,7 @@ def analyse():
     )
     db.session.add(new_query)
     db.session.commit()
-    job = q.enqueue(run_analysis_task, new_query.id, url, job_timeout=1800)  # timeout in seconds
+    job = q.enqueue(run_analysis_task, new_query.id, url, job_timeout=1800, email=current_user.email)  # timeout in seconds
     flash('Your analysis has been queued and will be processed soon.')
     return redirect(url_for('history'))
 

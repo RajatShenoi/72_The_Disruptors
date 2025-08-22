@@ -1,10 +1,14 @@
 import subprocess
 import tempfile
 import json
+
+from flask_mail import Message
 from models import db, Queries
 
-def run_analysis_task(query_id, url):
+def run_analysis_task(query_id, url, email):
     from app import app
+    from app import mail
+    import markdown
     with app.app_context():
         new_query = db.session.get(Queries, query_id)
         new_query.status = 0  # in progress
@@ -64,8 +68,8 @@ def run_analysis_task(query_id, url):
 
                         audit = audits.get(audit_id, {})
                         audit_data = {
-                            'title': audit.get('title', ''),
-                            'description': audit.get('description', ''),
+                            'title': markdown.markdown(audit.get('title', '')),
+                            'description': markdown.markdown(audit.get('description', '')),
                             'score': audit.get('score'),
                             'scoreDisplayMode': audit.get('scoreDisplayMode', ''),
                             'displayValue': get_display(audit),
@@ -123,7 +127,29 @@ def run_analysis_task(query_id, url):
             new_query.security = json.dumps(alerts_by_severity)
             new_query.status = 1  # completed
             db.session.commit()
+            try:
+                msg = Message(
+                    subject='Your Analysis is Complete',
+                    recipients=[email],
+                    body='Your analysis has been completed successfully.',
+                    sender="vulner@rajatshenoi.pw"
+                )
+                mail.send(msg)
+            except Exception as f:
+                print("FAILED", f)
+                app.logger.info(f"Failed to send email: {f}")
         except Exception as e:
             new_query.status = 2  # failed
             db.session.commit()
+            try:
+                msg = Message(
+                    subject='Your Analysis has Failed',
+                    recipients=[email],
+                    body='Your analysis has failed. This is most likely an error, please try again.',
+                    sender="vulner@rajatshenoi.pw"
+                )
+                mail.send(msg)
+            except Exception as f:
+                print("FAILED", f)
+                app.logger.info(f"Failed to send email: {f}")
             raise e
