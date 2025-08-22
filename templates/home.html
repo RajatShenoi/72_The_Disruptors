@@ -1,10 +1,121 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Home Page</h1>
-    <form action="/analyse" method="post">
-        <label for="url-input">Enter URL:</label>
-        <input type="url" id="url-input" name="url" required>
-        <button type="submit">Submit</button>
-    </form>
+    <!-- Hero Section -->
+    <main class="pt-16">
+        <div class="hero-gradient">
+            <div class="max-w-4xl mx-auto text-center py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
+                <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
+                    <span class="block">Get a complete</span>
+                    <span class="block text-indigo-600">Digital Health Check</span>
+                    <span class="block">for your website.</span>
+                </h1>
+                <p class="mt-6 max-w-2xl mx-auto text-lg text-gray-600">
+                    Our platform scans your website for security vulnerabilities, performance bottlenecks, SEO issues, and accessibility compliance, providing clear, actionable reports to help you improve.
+                </p>
+                
+                <!-- URL Input Form -->
+                <div class="mt-10 max-w-xl mx-auto">
+                    <form action="{{ url_for('analyse') }}" class="sm:flex sm:gap-4" method="POST">
+                        <div class="min-w-0 flex-1">
+                            <label for="url" class="sr-only">Website URL</label>
+                            <input type="url" name="url" id="url" class="block w-full px-5 py-4 text-base text-gray-900 placeholder-gray-500 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" placeholder="Enter your website URL (e.g., https://example.com)">
+                        </div>
+                        <div class="mt-4 sm:mt-0">
+                            <button type="submit" class="block w-full justify-center items-center px-6 py-4 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                                Audit Now
+                            </button>
+                        </div>
+                    </form>
+                    <p class="mt-3 text-sm text-gray-500">No credit card required. Start your free analysis.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Icons Section -->
+        <div class="bg-white py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-center">
+                    <!-- Feature 1: Security -->
+                    <div class="flex flex-col items-center">
+                        <div class="flex-shrink-0">
+                            <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-100 text-indigo-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-lg font-medium text-gray-900">Security</h3>
+                            <p class="mt-2 text-base text-gray-600">Identify vulnerabilities before they become a threat.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 2: Performance -->
+                    <div class="flex flex-col items-center">
+                        <div class="flex-shrink-0">
+                            <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-100 text-indigo-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-lg font-medium text-gray-900">Performance</h3>
+                            <p class="mt-2 text-base text-gray-600">Pinpoint bottlenecks and speed up your site.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 3: SEO -->
+                    <div class="flex flex-col items-center">
+                        <div class="flex-shrink-0">
+                            <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-100 text-indigo-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-lg font-medium text-gray-900">SEO</h3>
+                            <p class="mt-2 text-base text-gray-600">Improve your search engine ranking and visibility.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 4: Accessibility -->
+                    <div class="flex flex-col items-center">
+                        <div class="flex-shrink-0">
+                            <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-100 text-indigo-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-lg font-medium text-gray-900">Accessibility</h3>
+                            <p class="mt-2 text-base text-gray-600">Ensure your website is usable by everyone.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript for mobile menu -->
+    <script>
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const openIcon = mobileMenuButton.querySelector('svg.block');
+        const closeIcon = mobileMenuButton.querySelector('svg.hidden');
+
+        mobileMenuButton.addEventListener('click', () => {
+            // Toggle the 'hidden' class on the menu itself
+            mobileMenu.classList.toggle('hidden');
+            
+            // Toggle the 'hidden' class on the open and close icons
+            openIcon.classList.toggle('hidden');
+            closeIcon.classList.toggle('hidden');
+            
+            // Toggle the aria-expanded attribute for accessibility
+            const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
+            mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
+        });
+    </script>
 {% endblock %}

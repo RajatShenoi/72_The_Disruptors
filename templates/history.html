@@ -2,23 +2,86 @@
 
 {% block content %}
 
-<ul>
-    {% for query in user_queries %}
-        <li>
-            <a href="{{ url_for('saved_result', query_id=query.id) }}">{{ query.created_at }}</a> | {{ query.url }} | 
-            {% if query.status == 0 %}
-                In Progress
-            {% elif query.status == 1 %}
-                Completed
-            {% elif query.status == 2 %}
-                Failed
-            {% elif query.status == 3 %}
-                Queued
-            {% endif %}
-        </li>
-    {% else %}
-        <li>No history found.</li>
-    {% endfor %}
-</ul>
+<!-- Main Content -->
+<main class="pt-16">
+    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <header class="pb-8">
+            <h1 class="text-3xl font-bold leading-tight text-gray-900">Audit History</h1>
+            <p class="mt-2 text-sm text-gray-600">A log of all the website audits you have performed.</p>
+        </header>
+        
+        <!-- Reports List -->
+        <div class="bg-white shadow-md overflow-hidden rounded-lg">
+            <div class="flex flex-col">
+                <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                    <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                        <div class="overflow-hidden">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Website URL
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Date
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Status
+                                        </th>
+                                        <th scope="col" class="relative px-6 py-3">
+                                            <span class="sr-only">View Report</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for query in user_queries %}
+                                        <tr class="hover:bg-gray-50 transition-colors group">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <a href="{{ query.url }}" class="text-sm font-medium text-indigo-600 group-hover:text-indigo-800" target="_blank">{{ query.url }}</a>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ query.created_at }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                                    {% if query.status == 1 %}
+                                                        bg-green-100 text-green-800
+                                                    {% elif query.status == 2 %}
+                                                        bg-red-100 text-red-800
+                                                    {% elif query.status == 0 %}
+                                                        bg-yellow-100 text-yellow-800
+                                                    {% elif query.status == 3 %}
+                                                        bg-blue-100 text-blue-800
+                                                    {% endif %}
+                                                ">
+                                                    {% if query.status == 0 %}
+                                                        In Progress
+                                                    {% elif query.status == 1 %}
+                                                        Completed
+                                                    {% elif query.status == 2 %}
+                                                        Failed
+                                                    {% elif query.status == 3 %}
+                                                        Queued
+                                                    {% endif %}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                {% if query.status == 1 %}
+                                                    <a href="{{ url_for('saved_result', query_id=query.id) }}" class="text-indigo-600 hover:text-indigo-900">View Report</a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% else %}
+                                        <li>No history found.</li>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
 
 {% endblock %}

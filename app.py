@@ -95,7 +95,7 @@ def history():
 def saved_result():
     query_id = request.args.get('query_id')
     query = Queries.query.filter_by(id=query_id, user_id=current_user.id).first()
-    if not query:
+    if not query or query.status != 1:
         flash('Query not found.')
         return redirect(url_for('history'))
     
@@ -107,7 +107,8 @@ def saved_result():
         "results.html", 
         scores=scores,
         category_audits=category_audits,
-        alerts_by_severity=alerts_by_severity
+        alerts_by_severity=alerts_by_severity,
+        query=query
     )
 
 @app.route('/analyse', methods=['POST'])
